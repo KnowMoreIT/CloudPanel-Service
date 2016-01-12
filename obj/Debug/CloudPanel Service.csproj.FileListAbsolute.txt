@@ -1,0 +1,19 @@
+D:\Programming\CloudPanel\CloudPanel Service\bin\Debug\CloudPanel Service.exe.config
+D:\Programming\CloudPanel\CloudPanel Service\bin\Debug\CloudPanel Service.exe
+D:\Programming\CloudPanel\CloudPanel Service\bin\Debug\CloudPanel Service.pdb
+D:\Programming\CloudPanel\CloudPanel Service\bin\Debug\Common.Logging.Core.dll
+D:\Programming\CloudPanel\CloudPanel Service\bin\Debug\Common.Logging.dll
+D:\Programming\CloudPanel\CloudPanel Service\bin\Debug\log4net.dll
+D:\Programming\CloudPanel\CloudPanel Service\bin\Debug\Quartz.dll
+D:\Programming\CloudPanel\CloudPanel Service\bin\Debug\System.Management.Automation.dll
+D:\Programming\CloudPanel\CloudPanel Service\bin\Debug\Common.Logging.pdb
+D:\Programming\CloudPanel\CloudPanel Service\bin\Debug\Common.Logging.xml
+D:\Programming\CloudPanel\CloudPanel Service\bin\Debug\Common.Logging.Core.pdb
+D:\Programming\CloudPanel\CloudPanel Service\bin\Debug\Common.Logging.Core.xml
+D:\Programming\CloudPanel\CloudPanel Service\bin\Debug\log4net.xml
+D:\Programming\CloudPanel\CloudPanel Service\bin\Debug\Quartz.pdb
+D:\Programming\CloudPanel\CloudPanel Service\bin\Debug\Quartz.xml
+D:\Programming\CloudPanel\CloudPanel Service\obj\Debug\CloudPanel Service.exe
+D:\Programming\CloudPanel\CloudPanel Service\obj\Debug\CloudPanel Service.pdb
+D:\Programming\CloudPanel\CloudPanel Service\bin\Debug\Config\Settings.xml
+D:\Programming\CloudPanel\CloudPanel Service\obj\Debug\CloudPanel Service.csprojResolveAssemblyReference.cache

@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<cloudpanel>
+  <ActiveDirectory>
+    <GetDisabledUsers>10</GetDisabledUsers>
+    <GetLockedUsers>10</GetLockedUsers>
+  </ActiveDirectory>
+  <Exchange>
+    <GetMailboxSizes>720</GetMailboxSizes>
+    <GetMailboxDatabaseSizes>720</GetMailboxDatabaseSizes>
+    <GetMessageTrackingLogs>720</GetMessageTrackingLogs>
+  </Exchange>
+  <Database>
+    <FindMissingData>720</FindMissingData>
+    <UpdateDatabaseHistory>720</UpdateDatabaseHistory>
+  </Database>
+</cloudpanel>
