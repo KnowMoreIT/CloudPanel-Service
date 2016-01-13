@@ -20,29 +20,24 @@ namespace CPService.Tasks.ActiveDirectory
             if (users != null)
             {
                 logger.DebugFormat("Found {0} locked user(s): {1}", users.Count, String.Join(", ", users.Select(x => x.UserPrincipalName).ToList()));
-                CloudPanelDbContext db = null;
                 try
                 {
-                    db = new CloudPanelDbContext(Config.ServiceSettings.SqlConnectionString);
+                    using (var db = new CloudPanelDbContext(Config.ServiceSettings.SqlConnectionString))
+                    {
+                        var upns = users.Select(x => x.UserPrincipalName).ToList();
+                        var lockedUsers = db.Users.Where(x => upns.Any(a=>a == x.UserPrincipalName)).ToList();
+                        lockedUsers.ForEach(x => x.IsLockedOut = true);
 
-                    var upns = users.Select(x => x.UserPrincipalName).ToList();
-                    var lockedUsers = db.Users.Where(x => upns.Contains(x.UserPrincipalName)).ToList();
-                    lockedUsers.ForEach(x => x.IsLockedOut = true);
+                        var unlockedUsers = db.Users.Where(x => !upns.Any(a=>a == x.UserPrincipalName)).ToList();
+                        unlockedUsers.ForEach(x => x.IsLockedOut = false);
 
-                    var unlockedUsers = db.Users.Where(x => !upns.Contains(x.UserPrincipalName)).ToList();
-                    unlockedUsers.ForEach(x => x.IsLockedOut = false);
-
-                    db.SubmitChanges();
-                    logger.InfoFormat("Found a total of {0} locked out users and {1} unlocked users", lockedUsers.Count, unlockedUsers.Count);
+                        db.SubmitChanges();
+                        logger.InfoFormat("Found a total of {0} locked out users and {1} unlocked users", lockedUsers.Count, unlockedUsers.Count);
+                    }
                 }
                 catch (Exception ex)
                 {
                     logger.ErrorFormat("Error processing locked users: {0}", ex.ToString());
-                }
-                finally
-                {
-                    if (db != null)
-                        db.Dispose();
                 }
 
                 users = null;

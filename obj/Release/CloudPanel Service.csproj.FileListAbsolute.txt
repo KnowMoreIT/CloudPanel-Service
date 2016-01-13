@@ -1,0 +1,18 @@
+D:\Programming\CloudPanel\CloudPanel Service\bin\Release\CloudPanel Service.exe.config
+D:\Programming\CloudPanel\CloudPanel Service\bin\Release\Config\Settings.xml
+D:\Programming\CloudPanel\CloudPanel Service\bin\Release\CloudPanel Service.exe
+D:\Programming\CloudPanel\CloudPanel Service\bin\Release\CloudPanel Service.pdb
+D:\Programming\CloudPanel\CloudPanel Service\bin\Release\Common.Logging.Core.dll
+D:\Programming\CloudPanel\CloudPanel Service\bin\Release\Common.Logging.dll
+D:\Programming\CloudPanel\CloudPanel Service\bin\Release\log4net.dll
+D:\Programming\CloudPanel\CloudPanel Service\bin\Release\Quartz.dll
+D:\Programming\CloudPanel\CloudPanel Service\bin\Release\System.Management.Automation.dll
+D:\Programming\CloudPanel\CloudPanel Service\bin\Release\Common.Logging.pdb
+D:\Programming\CloudPanel\CloudPanel Service\bin\Release\Common.Logging.xml
+D:\Programming\CloudPanel\CloudPanel Service\bin\Release\Common.Logging.Core.pdb
+D:\Programming\CloudPanel\CloudPanel Service\bin\Release\Common.Logging.Core.xml
+D:\Programming\CloudPanel\CloudPanel Service\bin\Release\log4net.xml
+D:\Programming\CloudPanel\CloudPanel Service\bin\Release\Quartz.pdb
+D:\Programming\CloudPanel\CloudPanel Service\bin\Release\Quartz.xml
+D:\Programming\CloudPanel\CloudPanel Service\obj\Release\CloudPanel Service.exe
+D:\Programming\CloudPanel\CloudPanel Service\obj\Release\CloudPanel Service.pdb

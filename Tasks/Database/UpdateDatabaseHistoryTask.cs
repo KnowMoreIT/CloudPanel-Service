@@ -12,60 +12,55 @@ namespace CPService.Tasks.Database
 
         public void Execute(IJobExecutionContext context)
         {
-            CloudPanelDbContext db = null;
-
             try
             {
-                db = new CloudPanelDbContext(Config.ServiceSettings.SqlConnectionString);
-
-                // Get a list of ALL companies
-                var companies = db.Companies.Where(x => x.IsReseller != true)
-                                            .Select(x => new
-                                            {
-                                                ResellerCode = x.ResellerCode,
-                                                CompanyCode = x.CompanyCode,
-                                                CompanyName = x.CompanyName
-                                            }).ToList();
-
-                // Set our date and time when we started this task
-                var now = DateTime.Now;
-
-                // Go through all companies getting the latest values
-                companies.ForEach(x =>
+                using (var db = new CloudPanelDbContext(Config.ServiceSettings.SqlConnectionString))
                 {
-                    // Query all users
-                    var users = db.Users.Where(a => a.CompanyCode == x.CompanyCode)
-                                        .ToList();
 
-                    // See if we have any in Citrix
-                    var userIds = users.Select(a => a.ID).ToList();
-                    var citrixUsers = db.CitrixUserToDesktopGroup.Where(a => userIds.Contains(a.UserRefDesktopGroupId))
-                                                                 .Select(a => a.UserRefDesktopGroupId)
-                                                                 .Distinct()
-                                                                 .Count();
+                    // Get a list of ALL companies
+                    var companies = db.Companies.Where(x => x.IsReseller != true)
+                                                .Select(x => new
+                                                {
+                                                    ResellerCode = x.ResellerCode,
+                                                    CompanyCode = x.CompanyCode,
+                                                    CompanyName = x.CompanyName
+                                                }).ToList();
 
-                    var newStatistic = new Statistics();
-                    newStatistic.UserCount = users.Count;
-                    newStatistic.MailboxCount = users.Where(a => a.MailboxPlan > 0).Count();
-                    newStatistic.CitrixCount = citrixUsers;
-                    newStatistic.ResellerCode = x.ResellerCode;
-                    newStatistic.CompanyCode = x.CompanyCode;
-                    newStatistic.Retrieved = now;
+                    // Set our date and time when we started this task
+                    var now = DateTime.Now;
 
-                    db.Statistics.InsertOnSubmit(newStatistic);
-                });
+                    // Go through all companies getting the latest values
+                    companies.ForEach(x =>
+                    {
+                        // Query all users
+                        var users = db.Users.Where(a => a.CompanyCode == x.CompanyCode)
+                                                .ToList();
 
-                // Save changes to the database
-                db.SubmitChanges();
+                        // See if we have any in Citrix
+                        var userIds = users.Select(a => a.ID).ToList();
+                        var citrixUsers = db.CitrixUserToDesktopGroup.Where(a => userIds.Contains(a.UserRefDesktopGroupId))
+                                                                     .Select(a => a.UserRefDesktopGroupId)
+                                                                     .Distinct()
+                                                                     .Count();
+
+                        var newStatistic = new Statistics();
+                        newStatistic.UserCount = users.Count;
+                        newStatistic.MailboxCount = users.Where(a => a.MailboxPlan > 0).Count();
+                        newStatistic.CitrixCount = citrixUsers;
+                        newStatistic.ResellerCode = x.ResellerCode;
+                        newStatistic.CompanyCode = x.CompanyCode;
+                        newStatistic.Retrieved = now;
+
+                        db.Statistics.InsertOnSubmit(newStatistic);
+                    });
+
+                    // Save changes to the database
+                    db.SubmitChanges();
+                }
             }
             catch (Exception ex)
             {
                 logger.ErrorFormat("Error getting history statistics: {0}", ex.ToString());
-            }
-            finally
-            {
-                if (db != null)
-                    db.Dispose();
             }
         }
     }

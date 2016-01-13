@@ -16,4 +16,3 @@ D:\Programming\CloudPanel\CloudPanel Service\bin\Debug\Quartz.xml
 D:\Programming\CloudPanel\CloudPanel Service\obj\Debug\CloudPanel Service.exe
 D:\Programming\CloudPanel\CloudPanel Service\obj\Debug\CloudPanel Service.pdb
 D:\Programming\CloudPanel\CloudPanel Service\bin\Debug\Config\Settings.xml
-D:\Programming\CloudPanel\CloudPanel Service\obj\Debug\CloudPanel Service.csprojResolveAssemblyReference.cache
