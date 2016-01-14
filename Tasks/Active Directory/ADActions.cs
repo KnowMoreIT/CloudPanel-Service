@@ -15,7 +15,7 @@ namespace CPService.Tasks.ActiveDirectory
         /// <returns></returns>
         public static List<Users> GetDisabledUsers()
         {
-            List<Users> disabledUsers = new List<Users>();
+            List<Users> disabledUsers = new List<Users>(6000);
 
             PrincipalContext pc = null;
             PrincipalSearcher ps = null;
@@ -71,7 +71,7 @@ namespace CPService.Tasks.ActiveDirectory
         /// <returns></returns>
         public static List<Users> GetEnabledUsers()
         {
-            List<Users> enabledUsers = new List<Users>();
+            List<Users> enabledUsers = new List<Users>(6000);
 
             PrincipalContext pc = null;
             PrincipalSearcher ps = null;
@@ -127,7 +127,7 @@ namespace CPService.Tasks.ActiveDirectory
         /// <returns></returns>
         public static List<Users> GetLockedUsers()
         {
-            List<Users> lockedUsers = new List<Users>();
+            List<Users> lockedUsers = new List<Users>(6000);
 
             PrincipalContext pc = null;
             PrincipalSearcher ps = null;

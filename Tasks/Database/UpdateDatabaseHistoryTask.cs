@@ -2,10 +2,12 @@
 using log4net;
 using Quartz;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace CPService.Tasks.Database
 {
+    [DisallowConcurrentExecution]
     public class UpdateDatabaseHistoryTask : IJob
     {
         private static readonly ILog logger = LogManager.GetLogger("UpdateDatabaseHistoryTask");
@@ -14,7 +16,7 @@ namespace CPService.Tasks.Database
         {
             try
             {
-                using (var db = new CloudPanelDbContext(Config.ServiceSettings.SqlConnectionString))
+                using (CloudPanelDbContext db = new CloudPanelDbContext(Config.ServiceSettings.SqlConnectionString))
                 {
 
                     // Get a list of ALL companies
@@ -27,23 +29,23 @@ namespace CPService.Tasks.Database
                                                 }).ToList();
 
                     // Set our date and time when we started this task
-                    var now = DateTime.Now;
+                    DateTime now = DateTime.Now;
 
                     // Go through all companies getting the latest values
                     companies.ForEach(x =>
                     {
                         // Query all users
-                        var users = db.Users.Where(a => a.CompanyCode == x.CompanyCode)
+                        List<Users> users = db.Users.Where(a => a.CompanyCode == x.CompanyCode)
                                                 .ToList();
 
                         // See if we have any in Citrix
-                        var userIds = users.Select(a => a.ID).ToList();
-                        var citrixUsers = db.CitrixUserToDesktopGroup.Where(a => userIds.Contains(a.UserRefDesktopGroupId))
+                        List<int> userIds = users.Select(a => a.ID).ToList();
+                        int citrixUsers = db.CitrixUserToDesktopGroup.Where(a => userIds.Contains(a.UserRefDesktopGroupId))
                                                                      .Select(a => a.UserRefDesktopGroupId)
                                                                      .Distinct()
                                                                      .Count();
 
-                        var newStatistic = new Statistics();
+                        Statistics newStatistic = new Statistics();
                         newStatistic.UserCount = users.Count;
                         newStatistic.MailboxCount = users.Where(a => a.MailboxPlan > 0).Count();
                         newStatistic.CitrixCount = citrixUsers;

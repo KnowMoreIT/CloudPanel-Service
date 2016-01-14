@@ -2,10 +2,12 @@
 using log4net;
 using Quartz;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace CPService.Tasks.Exchange
 {
+    [DisallowConcurrentExecution]
     public class Get_MailboxSizesTask : IJob
     {
         private static readonly ILog logger = LogManager.GetLogger("Get_MailboxSizesTask");
@@ -16,15 +18,14 @@ namespace CPService.Tasks.Exchange
 
             try
             {
-                using (var db = new CloudPanelDbContext(Config.ServiceSettings.SqlConnectionString))
+                using (CloudPanelDbContext db = new CloudPanelDbContext(Config.ServiceSettings.SqlConnectionString))
                 {
                     // Get a list of all users with mailboxes
-                    var mailboxes = db.Users.Where(x => x.MailboxPlan > 0).ToList();
+                    List<Users> mailboxes = db.Users.Where(x => x.MailboxPlan > 0).ToList();
                     if (mailboxes != null)
                     {
-                        using (var powershell = new ExchActions())
+                        using (ExchActions powershell = new ExchActions())
                         {
-
                             mailboxes.ForEach(x =>
                             {
                                 try
@@ -36,7 +37,6 @@ namespace CPService.Tasks.Exchange
                                     size.UserPrincipalName = x.UserPrincipalName;
 
                                     db.StatMailboxSizes.InsertOnSubmit(size);
-
                                     processedCount += 1;
                                 }
                                 catch (Exception ex)
@@ -49,7 +49,7 @@ namespace CPService.Tasks.Exchange
                             mailboxes = null;
 
                             // Get archive mailbox sizes now
-                            var archiveMailboxes = mailboxes.Where(x => x.ArchivePlan > 0).ToList();
+                            List<Users> archiveMailboxes = mailboxes.Where(x => x.ArchivePlan > 0).ToList();
                             archiveMailboxes.ForEach(x =>
                             {
                                 try

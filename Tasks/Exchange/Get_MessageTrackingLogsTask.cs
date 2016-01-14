@@ -1,11 +1,14 @@
 ﻿using CPService.Database;
+using CPService.Models;
 using log4net;
 using Quartz;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace CPService.Tasks.Exchange
 {
+    [DisallowConcurrentExecution]
     public class Get_MessageTrackingLogsTask : IJob
     {
         private static readonly ILog logger = LogManager.GetLogger("Get_MessageTrackingLogsTask");
@@ -15,16 +18,16 @@ namespace CPService.Tasks.Exchange
             int processedCount = 0, failedCount = 0;
             try
             {
-                using (var powershell = new ExchActions())
+                using (ExchActions powershell = new ExchActions())
                 {
 
                     // Our timestamps to look for
-                    var startTime = DateTime.Now.AddHours(-24);
-                    var endTime = DateTime.Now;
+                    DateTime startTime = DateTime.Now.AddHours(-24);
+                    DateTime endTime = DateTime.Now;
 
                     // Get the sent and received logs for the past 24 hours from Exchange
-                    var sentLogs = powershell.Get_TotalSentMessages(startTime, endTime);
-                    var receivedLogs = powershell.Get_TotalReceivedMessages(startTime, endTime);
+                    List<MessageTrackingLog> sentLogs = powershell.Get_TotalSentMessages(startTime, endTime);
+                    List<MessageTrackingLog> receivedLogs = powershell.Get_TotalReceivedMessages(startTime, endTime);
 
                     // Initialize our database
                     using (var db = new CloudPanelDbContext(Config.ServiceSettings.SqlConnectionString))
@@ -43,10 +46,10 @@ namespace CPService.Tasks.Exchange
                         {
                             try
                             {
-                                var totalSentLogs = sentLogs.Where(a => a.Users.Contains(x.EmailAddress, StringComparer.OrdinalIgnoreCase)).ToList();
-                                var totalReceivedLogs = receivedLogs.Where(a => a.Users.Contains(x.EmailAddress, StringComparer.OrdinalIgnoreCase)).ToList();
+                                List<MessageTrackingLog> totalSentLogs = sentLogs.Where(a => a.Users.Contains(x.EmailAddress, StringComparer.OrdinalIgnoreCase)).ToList();
+                                List<MessageTrackingLog> totalReceivedLogs = receivedLogs.Where(a => a.Users.Contains(x.EmailAddress, StringComparer.OrdinalIgnoreCase)).ToList();
 
-                                var newCount = new StatMessageTrackingCounts();
+                                StatMessageTrackingCounts newCount = new StatMessageTrackingCounts();
                                 newCount.UserID = x.ID;
                                 newCount.Start = startTime;
                                 newCount.End = endTime;

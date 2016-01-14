@@ -5,6 +5,7 @@ using System;
 
 namespace CPService.Tasks.Exchange
 {
+    [DisallowConcurrentExecution]
     public class Get_MailboxDatabaseSizesTask : IJob
     {
         private static readonly ILog logger = LogManager.GetLogger("Get_MailboxDatabaseSizesTask");
@@ -15,10 +16,9 @@ namespace CPService.Tasks.Exchange
 
             try
             {
-                using (var db = new CloudPanelDbContext(Config.ServiceSettings.SqlConnectionString))
+                using (CloudPanelDbContext db = new CloudPanelDbContext(Config.ServiceSettings.SqlConnectionString))
                 {
-
-                    using (var powershell = new ExchActions())
+                    using (ExchActions powershell = new ExchActions())
                     {
                         var mailboxDatabases = powershell.Get_MailboxDatabaseSizes();
                         db.StatMailboxDatabaseSizes.InsertAllOnSubmit(mailboxDatabases);

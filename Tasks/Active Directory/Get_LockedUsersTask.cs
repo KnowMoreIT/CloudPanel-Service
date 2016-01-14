@@ -7,6 +7,7 @@ using System.Linq;
 
 namespace CPService.Tasks.ActiveDirectory
 {
+    [DisallowConcurrentExecution]
     public class Get_LockedUsersTask : IJob
     {
         private static readonly ILog logger = LogManager.GetLogger("Get_LockedUsersTask");
@@ -22,13 +23,13 @@ namespace CPService.Tasks.ActiveDirectory
                 logger.DebugFormat("Found {0} locked user(s): {1}", users.Count, String.Join(", ", users.Select(x => x.UserPrincipalName).ToList()));
                 try
                 {
-                    using (var db = new CloudPanelDbContext(Config.ServiceSettings.SqlConnectionString))
+                    using (CloudPanelDbContext db = new CloudPanelDbContext(Config.ServiceSettings.SqlConnectionString))
                     {
-                        var upns = users.Select(x => x.UserPrincipalName).ToList();
-                        var lockedUsers = db.Users.Where(x => upns.Any(a=>a == x.UserPrincipalName)).ToList();
+                        List<string> upns = users.Select(x => x.UserPrincipalName).ToList();
+                        List<Users> lockedUsers = db.Users.Where(x => upns.Contains(x.UserPrincipalName)).ToList();
                         lockedUsers.ForEach(x => x.IsLockedOut = true);
 
-                        var unlockedUsers = db.Users.Where(x => !upns.Any(a=>a == x.UserPrincipalName)).ToList();
+                        List<Users> unlockedUsers = db.Users.Where(x => !upns.Contains(x.UserPrincipalName)).ToList();
                         unlockedUsers.ForEach(x => x.IsLockedOut = false);
 
                         db.SubmitChanges();

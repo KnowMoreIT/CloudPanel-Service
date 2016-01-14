@@ -25,7 +25,7 @@ namespace CPService
 
             // Retrieve the intervals
             Config.ServiceTaskIntervals.GetIntervalsFromConfig();
-
+            
             var scheduleFactory = new StdSchedulerFactory();
             _scheduler = scheduleFactory.GetScheduler();
 

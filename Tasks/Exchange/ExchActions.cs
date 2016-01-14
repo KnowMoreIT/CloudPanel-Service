@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using System.Management.Automation;
@@ -25,12 +26,14 @@ namespace CPService.Tasks.Exchange
             cmd.AddParameter("DomainController", Config.ServiceSettings.PrimaryDC);
             _powershell.Commands = cmd;
 
-            var psObjects = _powershell.Invoke();
+            Collection<PSObject> psObjects = _powershell.Invoke();
             if (_powershell.HadErrors)
                 throw _powershell.Streams.Error[0].Exception;
             else
             {
                 var foundUser = psObjects[0];
+
+                psObjects = null;
                 return Guid.Parse(foundUser.Properties["ExchangeGuid"].Value.ToString());
             }
         }
@@ -52,10 +55,10 @@ namespace CPService.Tasks.Exchange
                 cmd.AddParameter("Archive");
             _powershell.Commands = cmd;
 
-            var psObjects = _powershell.Invoke();
+            Collection<PSObject> psObjects = _powershell.Invoke();
             if (psObjects.Count > 0)
             {
-                var returnSize = new StatMailboxSizes();
+                StatMailboxSizes returnSize = new StatMailboxSizes();
                 foreach (PSObject obj in psObjects)
                 {
                     returnSize.UserGuid = userGuid;
@@ -81,6 +84,7 @@ namespace CPService.Tasks.Exchange
                     userGuid, returnSize.MailboxDatabase, returnSize.TotalItemSize, returnSize.TotalItemSizeInBytes,
                     returnSize.TotalDeletedItemSize, returnSize.TotalDeletedItemSizeInBytes, returnSize.ItemCount, returnSize.DeletedItemCount);
 
+                psObjects = null;
                 return returnSize;
             }
             else
@@ -101,7 +105,7 @@ namespace CPService.Tasks.Exchange
         /// <returns></returns>
         public List<StatMailboxDatabaseSizes> Get_MailboxDatabaseSizes()
         {
-            var returnList = new List<StatMailboxDatabaseSizes>();
+            List<StatMailboxDatabaseSizes> returnList = new List<StatMailboxDatabaseSizes>(100);
 
             PSCommand cmd = new PSCommand();
             cmd.AddCommand("Get-MailboxDatabase");
@@ -110,14 +114,14 @@ namespace CPService.Tasks.Exchange
             cmd.AddParameter("DomainController", Config.ServiceSettings.PrimaryDC);
             _powershell.Commands = cmd;
 
-            var psObjects = _powershell.Invoke();
+            Collection<PSObject> psObjects = _powershell.Invoke();
             if (_powershell.HadErrors)
                 throw _powershell.Streams.Error[0].Exception;
 
-            var retrieved = DateTime.Now;
+            DateTime retrieved = DateTime.Now;
             foreach (var ps in psObjects)
             {
-                var newEntry = new StatMailboxDatabaseSizes();
+                StatMailboxDatabaseSizes newEntry = new StatMailboxDatabaseSizes();
                 newEntry.DatabaseName = ps.Members["Identity"].Value.ToString();
                 newEntry.Server = ps.Members["Server"].Value.ToString();
                 newEntry.Retrieved = retrieved;
@@ -137,6 +141,7 @@ namespace CPService.Tasks.Exchange
                 logger.DebugFormat("Found Exchange database {0} with size of {1}", newEntry.DatabaseName, newEntry.DatabaseSize);
             }
 
+            psObjects = null;
             return returnList;
         }
 
@@ -149,7 +154,7 @@ namespace CPService.Tasks.Exchange
         public List<Models.MessageTrackingLog> Get_TotalSentMessages(DateTime start, DateTime end)
         {
             logger.InfoFormat("Querying total sent messages from message logs beginning {0} and ending {1}", start.ToString(), end.ToString());
-            var totalSentMessages = new List<Models.MessageTrackingLog>();
+            List<Models.MessageTrackingLog> totalSentMessages = new List<Models.MessageTrackingLog>(0x00400000);
 
             PSCommand cmd = new PSCommand();
             if (Config.ServiceSettings.ExchangeVersion >= 2013)
@@ -165,7 +170,7 @@ namespace CPService.Tasks.Exchange
             cmd.AddParameter("DomainController", Config.ServiceSettings.PrimaryDC);
             _powershell.Commands = cmd;
 
-            var psObjects = _powershell.Invoke();
+            Collection<PSObject> psObjects = _powershell.Invoke();
             if (_powershell.HadErrors)
                 throw _powershell.Streams.Error[0].Exception;
             else
@@ -174,7 +179,7 @@ namespace CPService.Tasks.Exchange
 
                 foreach (PSObject ps in psObjects)
                 {
-                    var newLog = new Models.MessageTrackingLog();
+                    Models.MessageTrackingLog newLog = new Models.MessageTrackingLog();
                     newLog.Timestamp = DateTime.Parse(ps.Members["Timestamp"].Value.ToString());
                     newLog.ServerHostname = ps.Members["ServerHostname"].Value.ToString();
                     newLog.Source = ps.Members["Source"].Value.ToString();
@@ -191,6 +196,7 @@ namespace CPService.Tasks.Exchange
                 logger.DebugFormat("Finished filtering sent messages from {0} to {1}", start.ToString(), end.ToString());
             }
 
+            psObjects = null;
             return totalSentMessages;
         }
 
@@ -203,7 +209,7 @@ namespace CPService.Tasks.Exchange
         public List<Models.MessageTrackingLog> Get_TotalReceivedMessages(DateTime start, DateTime end)
         {
             logger.InfoFormat("Querying total received messages from message logs beginning {0} and ending {1}", start.ToString(), end.ToString());
-            var totalReceivedMessages = new List<Models.MessageTrackingLog>();
+            List<Models.MessageTrackingLog> totalReceivedMessages = new List<Models.MessageTrackingLog>(0x00400000);
 
             PSCommand cmd = new PSCommand();
             if (Config.ServiceSettings.ExchangeVersion >= 2013)
@@ -218,7 +224,7 @@ namespace CPService.Tasks.Exchange
             cmd.AddParameter("DomainController", Config.ServiceSettings.PrimaryDC);
             _powershell.Commands = cmd;
 
-            var psObjects = _powershell.Invoke();
+            Collection<PSObject> psObjects = _powershell.Invoke();
             if (_powershell.HadErrors)
                 throw _powershell.Streams.Error[0].Exception;
             else
@@ -227,7 +233,7 @@ namespace CPService.Tasks.Exchange
 
                 foreach (PSObject ps in psObjects)
                 {
-                    var newLog = new Models.MessageTrackingLog();
+                    Models.MessageTrackingLog newLog = new Models.MessageTrackingLog();
                     newLog.Timestamp = DateTime.Parse(ps.Members["Timestamp"].Value.ToString());
                     newLog.ServerHostname = ps.Members["ServerHostname"].Value.ToString();
                     newLog.Source = ps.Members["Source"].Value.ToString();
@@ -245,6 +251,7 @@ namespace CPService.Tasks.Exchange
                 logger.DebugFormat("Finished filtering received messages from {0} to {1}", start.ToString(), end.ToString());
             }
 
+            psObjects = null;
             return totalReceivedMessages;
         }
     }

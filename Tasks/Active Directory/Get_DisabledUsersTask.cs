@@ -7,6 +7,7 @@ using System.Linq;
 
 namespace CPService.Tasks.ActiveDirectory
 {
+    [DisallowConcurrentExecution]
     public class Get_DisabledUsersTask : IJob
     {
         private static readonly ILog logger = LogManager.GetLogger("Get_DisabledUsersTask");
@@ -26,10 +27,10 @@ namespace CPService.Tasks.ActiveDirectory
                     using (var db = new CloudPanelDbContext(Config.ServiceSettings.SqlConnectionString))
                     {
                         var upns = users.Select(x => x.UserPrincipalName).ToList();
-                        var disabledUsers = db.Users.Where(x => upns.Any(a => a == x.UserPrincipalName)).ToList();
+                        var disabledUsers = db.Users.Where(x => upns.Contains(x.UserPrincipalName)).ToList();
                         disabledUsers.ForEach(x => x.IsEnabled = false);
 
-                        var enabledUsers = db.Users.Where(x => !upns.Any(a => a == x.UserPrincipalName)).ToList();
+                        var enabledUsers = db.Users.Where(x => !upns.Contains(x.UserPrincipalName)).ToList();
                         enabledUsers.ForEach(x => x.IsEnabled = true);
 
                         db.SubmitChanges();

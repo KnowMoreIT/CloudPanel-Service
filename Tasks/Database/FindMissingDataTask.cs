@@ -3,10 +3,12 @@ using CPService.Tasks.Exchange;
 using log4net;
 using Quartz;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace CPService.Tasks.Database
 {
+    [DisallowConcurrentExecution]
     public class FindMissingDataTask : IJob
     {
         private static readonly ILog logger = LogManager.GetLogger("FindMissingDataTask");
@@ -19,23 +21,23 @@ namespace CPService.Tasks.Database
 
                 try
                 {
-                    using (var db = new CloudPanelDbContext(Config.ServiceSettings.SqlConnectionString))
+                    using (CloudPanelDbContext db = new CloudPanelDbContext(Config.ServiceSettings.SqlConnectionString))
                     {
                         // Find users with missing Exchange Guid that are Exchange enabled
-                        var users = db.Users.Where(x => x.MailboxPlan > 0)
+                        List<Users> users = db.Users.Where(x => x.MailboxPlan > 0)
                                             .Where(x => x.ExchangeGuid == Guid.Empty)
                                             .ToList();
 
                         if (users != null)
                         {
-                            using (var exchTasks = new ExchActions())
+                            using (ExchActions exchTasks = new ExchActions())
                             {
                                 users.ForEach(x =>
                                 {
                                     try
                                     {
                                         logger.DebugFormat("Retrieving ExchangeGuid for {0}", x.UserPrincipalName);
-                                        var exchangeGuid = exchTasks.Get_ExchangeGuid(x.UserPrincipalName);
+                                        Guid exchangeGuid = exchTasks.Get_ExchangeGuid(x.UserPrincipalName);
                                         x.ExchangeGuid = exchangeGuid;
 
                                         processedCount += 1;
