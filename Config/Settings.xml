@@ -5,12 +5,12 @@
     <GetLockedUsers>10</GetLockedUsers>
   </ActiveDirectory>
   <Exchange>
-    <GetMailboxSizes>720</GetMailboxSizes>
-    <GetMailboxDatabaseSizes>720</GetMailboxDatabaseSizes>
-    <GetMessageTrackingLogs>720</GetMessageTrackingLogs>
+    <GetMailboxSizes>999999999</GetMailboxSizes>
+    <GetMailboxDatabaseSizes>999999999</GetMailboxDatabaseSizes>
+    <GetMessageTrackingLogs>999999999</GetMessageTrackingLogs>
   </Exchange>
   <Database>
-    <FindMissingData>720</FindMissingData>
+    <FindMissingData>999999999</FindMissingData>
     <UpdateDatabaseHistory>720</UpdateDatabaseHistory>
   </Database>
 </cloudpanel>

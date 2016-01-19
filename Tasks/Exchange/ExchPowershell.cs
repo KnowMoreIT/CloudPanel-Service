@@ -1,14 +1,10 @@
 ﻿using CPService.Config;
 using log4net;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
 using System.Security;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CPService.Tasks.Exchange
 {
@@ -20,7 +16,7 @@ namespace CPService.Tasks.Exchange
         internal Runspace _runspace;
         internal PowerShell _powershell;
 
-        private readonly ILog logger = LogManager.GetLogger("Exchange Powershell");
+        private static readonly ILog logger = LogManager.GetLogger("Exchange");
 
         public ExchPowershell()
         {

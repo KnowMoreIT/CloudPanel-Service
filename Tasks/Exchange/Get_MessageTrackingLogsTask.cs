@@ -11,7 +11,7 @@ namespace CPService.Tasks.Exchange
     [DisallowConcurrentExecution]
     public class Get_MessageTrackingLogsTask : IJob
     {
-        private static readonly ILog logger = LogManager.GetLogger("Get_MessageTrackingLogsTask");
+        private static readonly ILog logger = LogManager.GetLogger("Exchange");
 
         public void Execute(IJobExecutionContext context)
         {
@@ -26,8 +26,8 @@ namespace CPService.Tasks.Exchange
                     DateTime endTime = DateTime.Now;
 
                     // Get the sent and received logs for the past 24 hours from Exchange
-                    List<MessageTrackingLog> sentLogs = powershell.Get_TotalSentMessages(startTime, endTime);
-                    List<MessageTrackingLog> receivedLogs = powershell.Get_TotalReceivedMessages(startTime, endTime);
+                    ListOfLists<MessageTrackingLog> sentLogs = powershell.Get_TotalSentMessages(startTime, endTime);
+                    ListOfLists<MessageTrackingLog> receivedLogs = powershell.Get_TotalReceivedMessages(startTime, endTime);
 
                     // Initialize our database
                     using (var db = new CloudPanelDbContext(Config.ServiceSettings.SqlConnectionString))
@@ -47,8 +47,11 @@ namespace CPService.Tasks.Exchange
                             try
                             {
                                 List<MessageTrackingLog> totalSentLogs = sentLogs.Where(a => a.Users.Contains(x.EmailAddress, StringComparer.OrdinalIgnoreCase)).ToList();
-                                List<MessageTrackingLog> totalReceivedLogs = receivedLogs.Where(a => a.Users.Contains(x.EmailAddress, StringComparer.OrdinalIgnoreCase)).ToList();
+                                logger.DebugFormat("Total sent logs found for {0} is {1}", x.EmailAddress, totalSentLogs.Count);
 
+                                List<MessageTrackingLog> totalReceivedLogs = receivedLogs.Where(a => a.Users.Contains(x.EmailAddress, StringComparer.OrdinalIgnoreCase)).ToList();
+                                logger.DebugFormat("Total received logs found for {0} is {1}", x.EmailAddress, totalReceivedLogs.Count);
+                               
                                 StatMessageTrackingCounts newCount = new StatMessageTrackingCounts();
                                 newCount.UserID = x.ID;
                                 newCount.Start = startTime;
@@ -59,7 +62,6 @@ namespace CPService.Tasks.Exchange
                                 newCount.TotalBytesReceived = totalReceivedLogs.Count > 0 ? totalReceivedLogs.Select(a => a.TotalBytes).Sum() : 0;
 
                                 db.StatMessageTrackingCounts.InsertOnSubmit(newCount);
-
                                 processedCount++;
                             }
                             catch (Exception ex)

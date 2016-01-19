@@ -8,7 +8,7 @@ namespace CPService.Tasks.Exchange
     [DisallowConcurrentExecution]
     public class Get_MailboxDatabaseSizesTask : IJob
     {
-        private static readonly ILog logger = LogManager.GetLogger("Get_MailboxDatabaseSizesTask");
+        private static readonly ILog logger = LogManager.GetLogger("Exchange");
 
         public void Execute(IJobExecutionContext context)
         {

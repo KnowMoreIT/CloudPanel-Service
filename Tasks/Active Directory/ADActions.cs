@@ -7,7 +7,7 @@ namespace CPService.Tasks.ActiveDirectory
 {
     public class ADActions
     {
-        private static readonly ILog logger = LogManager.GetLogger("ADActions");
+        private static readonly ILog logger = LogManager.GetLogger("AD");
 
         /// <summary>
         /// Gets a list of disabled users in Active Directory

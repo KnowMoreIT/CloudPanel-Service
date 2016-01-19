@@ -11,7 +11,7 @@ namespace CPService.Tasks.Exchange
 {
     public class ExchActions : ExchPowershell
     {
-        private static readonly ILog logger = LogManager.GetLogger("ExchActions");
+        private static readonly ILog logger = LogManager.GetLogger("Exchange");
 
         /// <summary>
         /// Empty constructor not used
@@ -140,8 +140,9 @@ namespace CPService.Tasks.Exchange
                 returnList.Add(newEntry);
                 logger.DebugFormat("Found Exchange database {0} with size of {1}", newEntry.DatabaseName, newEntry.DatabaseSize);
             }
-
             psObjects = null;
+
+            logger.DebugFormat("Returning a total of {0} mailbox databases", returnList.Count);
             return returnList;
         }
 
@@ -151,10 +152,10 @@ namespace CPService.Tasks.Exchange
         /// <param name="start"></param>
         /// <param name="end"></param>
         /// <returns></returns>
-        public List<Models.MessageTrackingLog> Get_TotalSentMessages(DateTime start, DateTime end)
+        public ListOfLists<Models.MessageTrackingLog> Get_TotalSentMessages(DateTime start, DateTime end)
         {
             logger.InfoFormat("Querying total sent messages from message logs beginning {0} and ending {1}", start.ToString(), end.ToString());
-            List<Models.MessageTrackingLog> totalSentMessages = new List<Models.MessageTrackingLog>(0x00400000);
+            ListOfLists<Models.MessageTrackingLog> totalSentMessages = new ListOfLists<Models.MessageTrackingLog>();
 
             PSCommand cmd = new PSCommand();
             if (Config.ServiceSettings.ExchangeVersion >= 2013)
@@ -195,8 +196,9 @@ namespace CPService.Tasks.Exchange
 
                 logger.DebugFormat("Finished filtering sent messages from {0} to {1}", start.ToString(), end.ToString());
             }
-
             psObjects = null;
+
+            logger.DebugFormat("Returning a total of {0} sent messages", totalSentMessages.Count);
             return totalSentMessages;
         }
 
@@ -206,10 +208,10 @@ namespace CPService.Tasks.Exchange
         /// <param name="start"></param>
         /// <param name="end"></param>
         /// <returns></returns>
-        public List<Models.MessageTrackingLog> Get_TotalReceivedMessages(DateTime start, DateTime end)
+        public ListOfLists<Models.MessageTrackingLog> Get_TotalReceivedMessages(DateTime start, DateTime end)
         {
             logger.InfoFormat("Querying total received messages from message logs beginning {0} and ending {1}", start.ToString(), end.ToString());
-            List<Models.MessageTrackingLog> totalReceivedMessages = new List<Models.MessageTrackingLog>(0x00400000);
+            ListOfLists<Models.MessageTrackingLog> totalReceivedMessages = new ListOfLists<Models.MessageTrackingLog>();
 
             PSCommand cmd = new PSCommand();
             if (Config.ServiceSettings.ExchangeVersion >= 2013)
@@ -250,8 +252,9 @@ namespace CPService.Tasks.Exchange
 
                 logger.DebugFormat("Finished filtering received messages from {0} to {1}", start.ToString(), end.ToString());
             }
-
             psObjects = null;
+
+            logger.DebugFormat("Returning a total of {0} received messages", totalReceivedMessages.Count);
             return totalReceivedMessages;
         }
     }

@@ -10,7 +10,7 @@ namespace CPService.Tasks.ActiveDirectory
     [DisallowConcurrentExecution]
     public class Get_DisabledUsersTask : IJob
     {
-        private static readonly ILog logger = LogManager.GetLogger("Get_DisabledUsersTask");
+        private static readonly ILog logger = LogManager.GetLogger("AD");
 
         public void Execute(IJobExecutionContext context)
         {
