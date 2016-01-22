@@ -1,17 +1,12 @@
-﻿using log4net;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 
 namespace CPService.Config
 {
     public class ServiceTaskIntervals
     {
-        private static readonly ILog logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
         /// <summary>
         /// Interval to get a list of disabled users from Active Directory
         /// </summary>
@@ -56,7 +51,6 @@ namespace CPService.Config
             {
                 var _assembly = System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase;
                 var path = string.Format("{0}\\{1}", System.IO.Path.GetDirectoryName(_assembly), "config\\settings.xml");
-                logger.DebugFormat("Retrieving intervals from the config file: {0}", path);
                 
                 var xDoc = XDocument.Load(path);
                 var x = from s in xDoc.Elements("cloudpanel") select s;
@@ -77,7 +71,7 @@ namespace CPService.Config
             }
             catch (Exception ex)
             {
-                logger.ErrorFormat("Error retrieving intervals from the config file: {0}", ex.ToString());
+                CPService.LogError("Error retrieving intervals from config file: " + ex.ToString());
             }
         }
 

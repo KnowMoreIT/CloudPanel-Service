@@ -79,6 +79,11 @@ namespace CPService
                                  .Build();
         }
 
+        public static void LogError(string message)
+        {
+            logger.ErrorFormat(message);
+        }
+
         protected override void OnStop()
         {
             if (_scheduler != null)

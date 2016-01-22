@@ -16,8 +16,6 @@ namespace CPService.Tasks.Exchange
         internal Runspace _runspace;
         internal PowerShell _powershell;
 
-        private static readonly ILog logger = LogManager.GetLogger("Exchange");
-
         public ExchPowershell()
         {
             string uri = string.Format("https://{0}/powershell", ServiceSettings.ExchangeServer);
@@ -83,7 +81,10 @@ namespace CPService.Tasks.Exchange
                     _powershell.Dispose();
 
                 if (_runspace != null)
+                {
+                    _runspace.Close();
                     _runspace.Dispose();
+                }
 
                 _connection = null;
             }

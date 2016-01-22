@@ -11,58 +11,43 @@ namespace CPService.Tasks.Database
     [DisallowConcurrentExecution]
     public class FindMissingDataTask : IJob
     {
-        private static readonly ILog logger = LogManager.GetLogger("FindMissingDataTask");
-
         public void Execute(IJobExecutionContext context)
         {
             if (Config.ServiceSettings.ExchangeVersion > 2010)
             {
-                int processedCount = 0, failedCount = 0;
-
                 try
                 {
                     using (CloudPanelDbContext db = new CloudPanelDbContext(Config.ServiceSettings.SqlConnectionString))
                     {
                         // Find users with missing Exchange Guid that are Exchange enabled
-                        List<Users> users = db.Users.Where(x => x.MailboxPlan > 0)
-                                            .Where(x => x.ExchangeGuid == Guid.Empty)
-                                            .ToList();
+                        IEnumerable<Users> users = db.Users.Where(x => x.MailboxPlan > 0).Where(x => x.ExchangeGuid == Guid.Empty);
 
                         if (users != null)
                         {
                             using (ExchActions exchTasks = new ExchActions())
                             {
-                                users.ForEach(x =>
+                                foreach (Users user in users)
                                 {
                                     try
                                     {
-                                        logger.DebugFormat("Retrieving ExchangeGuid for {0}", x.UserPrincipalName);
-                                        Guid exchangeGuid = exchTasks.Get_ExchangeGuid(x.UserPrincipalName);
-                                        x.ExchangeGuid = exchangeGuid;
-
-                                        processedCount += 1;
+                                        Guid exchangeGuid = exchTasks.Get_ExchangeGuid(user.UserPrincipalName);
+                                        user.ExchangeGuid = exchangeGuid;
                                     }
                                     catch (Exception ex)
                                     {
-                                        logger.ErrorFormat("Error retrieving Exchange GUID for {0}: {1}", x.UserPrincipalName, ex.ToString());
-                                        failedCount += 1;
+                                        CPService.LogError("Error retrieving Exchange GUID for " + user.UserPrincipalName + ": " + ex.ToString());
                                     }
-                                });
+                                }
 
                                 db.SubmitChanges();
                             }
-                            users = null;
                         }
-                        else
-                            logger.InfoFormat("No users are missing the ExchangeGuid value!");
                     }
                 }
                 catch (Exception ex)
                 {
-                    logger.ErrorFormat("Error finding missing ExchangeGuid values: {0}", ex.ToString());
+                    CPService.LogError("Error finding missing ExchangeGuid values: " + ex.ToString());
                 }
-
-                logger.InfoFormat("Processed a total of {0} users with {1} that have failed", processedCount, failedCount);
             }
         }
     }

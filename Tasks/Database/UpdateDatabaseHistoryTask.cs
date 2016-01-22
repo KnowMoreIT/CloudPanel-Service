@@ -10,51 +10,39 @@ namespace CPService.Tasks.Database
     [DisallowConcurrentExecution]
     public class UpdateDatabaseHistoryTask : IJob
     {
-        private static readonly ILog logger = LogManager.GetLogger("UpdateDatabaseHistoryTask");
-
         public void Execute(IJobExecutionContext context)
         {
             try
             {
                 using (CloudPanelDbContext db = new CloudPanelDbContext(Config.ServiceSettings.SqlConnectionString))
                 {
-
                     // Get a list of ALL companies
-                    var companies = db.Companies.Where(x => x.IsReseller != true)
-                                                .Select(x => new
-                                                {
-                                                    ResellerCode = x.ResellerCode,
-                                                    CompanyCode = x.CompanyCode,
-                                                    CompanyName = x.CompanyName
-                                                }).ToList();
+                    IEnumerable<Companies> companies = db.Companies.Where(x => x.IsReseller != true);
 
                     // Set our date and time when we started this task
                     DateTime now = DateTime.Now;
 
                     // Go through all companies getting the latest values
-                    companies.ForEach(x =>
+                    foreach (Companies company in companies)
                     {
-                        // Query all users
-                        List<Users> users = db.Users.Where(a => a.CompanyCode == x.CompanyCode)
-                                                .ToList();
+                        IEnumerable<Users> users = db.Users.Where(x => x.CompanyCode == company.CompanyCode);
+                        IEnumerable<int> userIds = users.Select(x => x.ID);
 
-                        // See if we have any in Citrix
-                        List<int> userIds = users.Select(a => a.ID).ToList();
-                        int citrixUsers = db.CitrixUserToDesktopGroup.Where(a => userIds.Contains(a.UserRefDesktopGroupId))
-                                                                     .Select(a => a.UserRefDesktopGroupId)
+                        int citrixUsers = db.CitrixUserToDesktopGroup.Where(x => userIds.Contains(x.UserRefDesktopGroupId))
+                                                                     .Select(x => x.UserRefDesktopGroupId)
                                                                      .Distinct()
                                                                      .Count();
 
                         Statistics newStatistic = new Statistics();
-                        newStatistic.UserCount = users.Count;
+                        newStatistic.UserCount = users.Count();
                         newStatistic.MailboxCount = users.Where(a => a.MailboxPlan > 0).Count();
                         newStatistic.CitrixCount = citrixUsers;
-                        newStatistic.ResellerCode = x.ResellerCode;
-                        newStatistic.CompanyCode = x.CompanyCode;
+                        newStatistic.ResellerCode = company.ResellerCode;
+                        newStatistic.CompanyCode = company.CompanyCode;
                         newStatistic.Retrieved = now;
 
                         db.Statistics.InsertOnSubmit(newStatistic);
-                    });
+                    }
 
                     // Save changes to the database
                     db.SubmitChanges();
@@ -62,7 +50,7 @@ namespace CPService.Tasks.Database
             }
             catch (Exception ex)
             {
-                logger.ErrorFormat("Error getting history statistics: {0}", ex.ToString());
+                CPService.LogError("Error getting history statistics: " + ex.ToString());
             }
         }
     }

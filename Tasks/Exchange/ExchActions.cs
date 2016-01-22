@@ -1,5 +1,4 @@
-﻿using log4net;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -11,8 +10,6 @@ namespace CPService.Tasks.Exchange
 {
     public class ExchActions : ExchPowershell
     {
-        private static readonly ILog logger = LogManager.GetLogger("Exchange");
-
         /// <summary>
         /// Empty constructor not used
         /// </summary>
@@ -32,8 +29,6 @@ namespace CPService.Tasks.Exchange
             else
             {
                 var foundUser = psObjects[0];
-
-                psObjects = null;
                 return Guid.Parse(foundUser.Properties["ExchangeGuid"].Value.ToString());
             }
         }
@@ -45,8 +40,6 @@ namespace CPService.Tasks.Exchange
         /// <returns></returns>
         public StatMailboxSizes Get_MailboxSize(Guid userGuid, bool isArchive = false)
         {
-            logger.DebugFormat("Getting mailbox size for {0}", userGuid);
-
             PSCommand cmd = new PSCommand();
             cmd.AddCommand("Get-MailboxStatistics");
             cmd.AddParameter("Identity", userGuid.ToString());
@@ -79,12 +72,7 @@ namespace CPService.Tasks.Exchange
                     returnSize.Retrieved = DateTime.Now;
                     break;
                 }
-
-                logger.DebugFormat("Successfully retrieves mailbox statistics for {0}: {1}, {2}, {3}, {4}, {5}, {6}, {7}",
-                    userGuid, returnSize.MailboxDatabase, returnSize.TotalItemSize, returnSize.TotalItemSizeInBytes,
-                    returnSize.TotalDeletedItemSize, returnSize.TotalDeletedItemSizeInBytes, returnSize.ItemCount, returnSize.DeletedItemCount);
-
-                psObjects = null;
+                
                 return returnSize;
             }
             else
@@ -138,11 +126,8 @@ namespace CPService.Tasks.Exchange
                 }
 
                 returnList.Add(newEntry);
-                logger.DebugFormat("Found Exchange database {0} with size of {1}", newEntry.DatabaseName, newEntry.DatabaseSize);
             }
-            psObjects = null;
-
-            logger.DebugFormat("Returning a total of {0} mailbox databases", returnList.Count);
+            
             return returnList;
         }
 
@@ -152,10 +137,9 @@ namespace CPService.Tasks.Exchange
         /// <param name="start"></param>
         /// <param name="end"></param>
         /// <returns></returns>
-        public ListOfLists<Models.MessageTrackingLog> Get_TotalSentMessages(DateTime start, DateTime end)
+        public List<Models.MessageTrackingLog> Get_TotalSentMessages(DateTime start, DateTime end)
         {
-            logger.InfoFormat("Querying total sent messages from message logs beginning {0} and ending {1}", start.ToString(), end.ToString());
-            ListOfLists<Models.MessageTrackingLog> totalSentMessages = new ListOfLists<Models.MessageTrackingLog>();
+            List<Models.MessageTrackingLog> totalSentMessages = new List<Models.MessageTrackingLog>();
 
             PSCommand cmd = new PSCommand();
             if (Config.ServiceSettings.ExchangeVersion >= 2013)
@@ -176,8 +160,6 @@ namespace CPService.Tasks.Exchange
                 throw _powershell.Streams.Error[0].Exception;
             else
             {
-                logger.DebugFormat("Found a total of {0} sent messages from {1} to {2}... filtering...", psObjects.Count, start.ToString(), end.ToString());
-
                 foreach (PSObject ps in psObjects)
                 {
                     Models.MessageTrackingLog newLog = new Models.MessageTrackingLog();
@@ -193,12 +175,8 @@ namespace CPService.Tasks.Exchange
                     if (newLog.Source.Equals("STOREDRIVER"))
                         totalSentMessages.Add(newLog);
                 }
-
-                logger.DebugFormat("Finished filtering sent messages from {0} to {1}", start.ToString(), end.ToString());
             }
-            psObjects = null;
-
-            logger.DebugFormat("Returning a total of {0} sent messages", totalSentMessages.Count);
+            
             return totalSentMessages;
         }
 
@@ -208,10 +186,9 @@ namespace CPService.Tasks.Exchange
         /// <param name="start"></param>
         /// <param name="end"></param>
         /// <returns></returns>
-        public ListOfLists<Models.MessageTrackingLog> Get_TotalReceivedMessages(DateTime start, DateTime end)
+        public List<Models.MessageTrackingLog> Get_TotalReceivedMessages(DateTime start, DateTime end)
         {
-            logger.InfoFormat("Querying total received messages from message logs beginning {0} and ending {1}", start.ToString(), end.ToString());
-            ListOfLists<Models.MessageTrackingLog> totalReceivedMessages = new ListOfLists<Models.MessageTrackingLog>();
+            List<Models.MessageTrackingLog> totalReceivedMessages = new List<Models.MessageTrackingLog>();
 
             PSCommand cmd = new PSCommand();
             if (Config.ServiceSettings.ExchangeVersion >= 2013)
@@ -231,8 +208,6 @@ namespace CPService.Tasks.Exchange
                 throw _powershell.Streams.Error[0].Exception;
             else
             {
-                logger.DebugFormat("Found a total of {0} received messages from {1} to {2}... filtering...", psObjects.Count, start.ToString(), end.ToString());
-
                 foreach (PSObject ps in psObjects)
                 {
                     Models.MessageTrackingLog newLog = new Models.MessageTrackingLog();
@@ -249,12 +224,8 @@ namespace CPService.Tasks.Exchange
 
                     totalReceivedMessages.Add(newLog);
                 }
-
-                logger.DebugFormat("Finished filtering received messages from {0} to {1}", start.ToString(), end.ToString());
             }
-            psObjects = null;
 
-            logger.DebugFormat("Returning a total of {0} received messages", totalReceivedMessages.Count);
             return totalReceivedMessages;
         }
     }

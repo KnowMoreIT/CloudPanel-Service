@@ -3,6 +3,7 @@ using log4net;
 using Quartz;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
 
 namespace CPService.Tasks.ActiveDirectory
@@ -10,39 +11,38 @@ namespace CPService.Tasks.ActiveDirectory
     [DisallowConcurrentExecution]
     public class Get_DisabledUsersTask : IJob
     {
-        private static readonly ILog logger = LogManager.GetLogger("AD");
-
         public void Execute(IJobExecutionContext context)
         {
-            logger.InfoFormat("Processing disabled users");
-
             // Get the list of disabled users
             List<Users> users = ADActions.GetDisabledUsers();
             if (users != null)
-            {
-                logger.DebugFormat("Found {0} disabled user(s): {1}", users.Count, String.Join(", ", users.Select(x => x.UserPrincipalName).ToList()));
-               
+            {               
                 try
                 {
-                    using (var db = new CloudPanelDbContext(Config.ServiceSettings.SqlConnectionString))
+                    using (SqlConnection sql = new SqlConnection(Config.ServiceSettings.SqlConnectionString))
                     {
-                        var upns = users.Select(x => x.UserPrincipalName).ToList();
-                        var disabledUsers = db.Users.Where(x => upns.Contains(x.UserPrincipalName)).ToList();
-                        disabledUsers.ForEach(x => x.IsEnabled = false);
+                        sql.Open();
 
-                        var enabledUsers = db.Users.Where(x => !upns.Contains(x.UserPrincipalName)).ToList();
-                        enabledUsers.ForEach(x => x.IsEnabled = true);
+                        using (SqlCommand cmd = new SqlCommand("UPDATE Users SET IsEnabled=@IsEnabled WHERE UserPrincipalName=@UserPrincipalName", sql))
+                        {
+                            users.ForEach(x =>
+                            {
+                                if (!string.IsNullOrEmpty(x.UserPrincipalName))
+                                {
+                                    cmd.Parameters.Clear();
+                                    cmd.Parameters.AddWithValue("IsEnabled", x.IsEnabled ?? true);
+                                    cmd.Parameters.AddWithValue("UserPrincipalName", x.UserPrincipalName);
 
-                        db.SubmitChanges();
-                        logger.InfoFormat("Found a total of {0} disabled users and {1} enabled users", disabledUsers.Count, enabledUsers.Count);
+                                    cmd.ExecuteNonQuery();
+                                }
+                            });
+                        }
                     }
                 }
                 catch (Exception ex)
                 {
-                    logger.ErrorFormat("Error processing disabled users: {0}", ex.ToString());
+                    CPService.LogError("Error processing disabled users: " + ex.ToString());
                 }
-
-                users = null;
             }
         }
     }

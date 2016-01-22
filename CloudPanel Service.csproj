@@ -75,7 +75,6 @@
     <Compile Include="CPService.Designer.cs">
       <DependentUpon>CPService.cs</DependentUpon>
     </Compile>
-    <Compile Include="LargeObjectsHeapTester.cs" />
     <Compile Include="Models\TempMessageTrackingLog.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -10,8 +10,6 @@ namespace CPService.Config
 {
     public class ServiceSettings
     {
-        private static readonly ILog logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
         private static string _password;
 
 
@@ -99,9 +97,7 @@ namespace CPService.Config
         public static void ReadSettings()
         {
             try
-            {
-                logger.DebugFormat("Reading settings from {0}", Settings.Default.SettingsPath);
-                
+            {                
                 var xDoc = XDocument.Load(Settings.Default.SettingsPath);
                 var x = from s in xDoc.Elements("cloudpanel") select s;
 
@@ -119,7 +115,7 @@ namespace CPService.Config
             }
             catch (Exception ex)
             {
-                logger.ErrorFormat("Error reading settings: {0}", ex.ToString());
+                CPService.LogError("Error reading settings: " + ex.ToString());
             }
         }
 

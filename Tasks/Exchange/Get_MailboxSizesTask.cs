@@ -1,5 +1,4 @@
 ﻿using CPService.Database;
-using log4net;
 using Quartz;
 using System;
 using System.Collections.Generic;
@@ -10,55 +9,44 @@ namespace CPService.Tasks.Exchange
     [DisallowConcurrentExecution]
     public class Get_MailboxSizesTask : IJob
     {
-        private static readonly ILog logger = LogManager.GetLogger("Exchange");
-
         public void Execute(IJobExecutionContext context)
         {
-            int processedCount = 0, failedCount = 0;
-
             try
             {
                 using (CloudPanelDbContext db = new CloudPanelDbContext(Config.ServiceSettings.SqlConnectionString))
                 {
                     // Get a list of all users with mailboxes
-                    List<Users> mailboxes = db.Users.Where(x => x.MailboxPlan > 0).ToList();
+                    IEnumerable<Users> mailboxes = db.Users.Where(x => x.MailboxPlan > 0);
+                    IEnumerable<Users> archives = mailboxes.Where(x => x.ArchivePlan > 0);
                     if (mailboxes != null)
                     {
                         using (ExchActions powershell = new ExchActions())
                         {
-                            mailboxes.ForEach(x =>
+                            // Process mailbox sizes
+                            foreach (Users user in mailboxes)
                             {
                                 try
                                 {
-                                    logger.DebugFormat("Processing mailbox {0} for size report", x.UserPrincipalName);
-
-                                    StatMailboxSizes size = powershell.Get_MailboxSize(x.UserGuid, false);
-                                    size.UserGuid = x.UserGuid;
-                                    size.UserPrincipalName = x.UserPrincipalName;
+                                    StatMailboxSizes size = powershell.Get_MailboxSize(user.UserGuid, false);
+                                    size.UserGuid = user.UserGuid;
+                                    size.UserPrincipalName = user.UserPrincipalName;
 
                                     db.StatMailboxSizes.InsertOnSubmit(size);
-                                    processedCount += 1;
                                 }
                                 catch (Exception ex)
                                 {
-                                    logger.ErrorFormat("Error getting mailbox size for {0}: {1}", x.UserPrincipalName, ex.ToString());
-                                    failedCount += 1;
+                                    CPService.LogError("Error getting mailbox size for " + user.UserPrincipalName + ": " + ex.ToString());
                                 }
-                            });
-                            db.SubmitChanges();
-                            mailboxes = null;
+                            }
 
-                            // Get archive mailbox sizes now
-                            List<Users> archiveMailboxes = mailboxes.Where(x => x.ArchivePlan > 0).ToList();
-                            archiveMailboxes.ForEach(x =>
+                            // Process archive sizes
+                            foreach (Users user in archives)
                             {
                                 try
                                 {
-                                    logger.DebugFormat("Processing archive mailbox {0} for size report", x.UserPrincipalName);
-
-                                    StatMailboxSizes size = powershell.Get_MailboxSize(x.UserGuid, true);
-                                    size.UserGuid = x.UserGuid;
-                                    size.UserPrincipalName = x.UserPrincipalName;
+                                    StatMailboxSizes size = powershell.Get_MailboxSize(user.UserGuid, true);
+                                    size.UserGuid = user.UserGuid;
+                                    size.UserPrincipalName = user.UserPrincipalName;
 
                                     db.StatMailboxArchiveSizes.InsertOnSubmit(new StatMailboxArchiveSizes()
                                     {
@@ -73,27 +61,23 @@ namespace CPService.Tasks.Exchange
                                         DeletedItemCount = size.DeletedItemCount,
                                         Retrieved = size.Retrieved
                                     });
-
-                                    processedCount += 1;
                                 }
                                 catch (Exception ex)
                                 {
-                                    logger.ErrorFormat("Error getting archive mailbox size for {0}: {1}", x.UserPrincipalName, ex.ToString());
-                                    failedCount += 1;
+                                    CPService.LogError("Error getting archive mailbox size for " + user.UserPrincipalName + ": " + ex.ToString());
                                 }
-                            });
+                            }
+
+                            // Save the database changes now
                             db.SubmitChanges();
-                            archiveMailboxes = null;
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                logger.ErrorFormat("Failed to retrieve mailbox and archive sizes: {0}", ex.ToString());
+                CPService.LogError("Failed to retrieve mailbox and archive sizes: " + ex.ToString());
             }
-
-            logger.InfoFormat("Processed a total of {0} mailbox and archive sizes with {1} failed", processedCount, failedCount);
         }
     }
 }
